@@ -1,63 +1,69 @@
 from django.http import HttpResponse
+from django.template import loader
+
+from .models import Question
 
 
 def index(request):
-    return HttpResponse("""Add-Type -AssemblyName System.Windows.Forms
-Add-Type -AssemblyName System.Drawing
+    latest_question_list = Question.objects.order_by("-pub_date")[:5]
+    template = loader.get_template("polls/index.html")
+    context = {"latest_question_list": latest_question_list}
+    return HttpResponse(template.render(context, request))
+from django.shortcuts import get_object_or_404, render
 
-# Import user32.dll for mouse clicks & key detection
-Add-Type @"
-using System;
-using System.Runtime.InteropServices;
-public class Mouse {
-    [DllImport("user32.dll")]
-    public static extern void mouse_event(uint dwFlags, uint dx, uint dy, uint dwData, int dwExtraInfo);
+from .models import Question
 
-    [DllImport("user32.dll")]
-    public static extern short GetAsyncKeyState(int vKey);
-}
-"@
 
-# Mouse event constants
-$MOUSEEVENTF_LEFTDOWN = 0x02
-$MOUSEEVENTF_LEFTUP   = 0x04
+# ...
+def detail(request, question_id):
+    question = get_object_or_404(Question, pk=question_id)
+    return render(request, "polls/detail.html", {"question": question})
 
-# Virtual key codes
-$VK_K     = 0x4B
-$VK_J     = 0x4A
-$VK_ESC   = 0x1B
 
-$Clicking = $false
 
-Write-Host "Press 'K' to START clicking, 'J' to STOP, 'Esc' to EXIT."
 
-while ($true) {
-    # If K pressed -> start clicking
-    if ([Mouse]::GetAsyncKeyState($VK_K) -lt 0) {
-        $Clicking = $true
-        Start-Sleep -Milliseconds 200  # prevent rapid toggle
-        Write-Host "Clicker ON"
-    }
 
-    # If J pressed -> stop clicking
-    if ([Mouse]::GetAsyncKeyState($VK_J) -lt 0) {
-        $Clicking = $false
-        Start-Sleep -Milliseconds 200
-        Write-Host "Clicker OFF"
-    }
 
-    # If Esc pressed -> exit
-    if ([Mouse]::GetAsyncKeyState($VK_ESC) -lt 0) {
-        break
-    }
 
-    # Perform clicks if active
-    if ($Clicking) {
-        [Mouse]::mouse_event($MOUSEEVENTF_LEFTDOWN, 0, 0, 0, 0)
-        [Mouse]::mouse_event($MOUSEEVENTF_LEFTUP, 0, 0, 0, 0)
-        Start-Sleep -Milliseconds 1  # click speed
-    } else {
-        Start-Sleep -Milliseconds 10
-    }
-}
-""")
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def results(request, question_id):
+    response = "You're looking at the results of question %s."
+    return HttpResponse(response % question_id)
+
+
+def vote(request, question_id):
+    return HttpResponse("You're voting on question %s." % question_id)
